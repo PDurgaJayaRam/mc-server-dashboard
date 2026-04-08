@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-3xl font-bold text-white mb-2">Player Management</h1>
+    <p class="text-gray-400">View and manage players who have joined this server.</p>
+</div>
+
+<div class="glass-panel overflow-hidden border border-gray-800 rounded-xl">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="uppercase tracking-wider text-gray-500 bg-gray-900/80 border-b border-gray-800 font-semibold">
+                <tr>
+                    <th scope="col" class="px-6 py-4">Player</th>
+                    <th scope="col" class="px-6 py-4">Roles</th>
+                    <th scope="col" class="px-6 py-4">UUID</th>
+                    <th scope="col" class="px-6 py-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800/50">
+                {% for player in players %}
+                <tr class="hover:bg-gray-800/30 transition group">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <img src="https://crafatar.com/avatars/{{ player.uuid }}?size=32&overlay" class="w-8 h-8 rounded" alt="Avatar" onerror="this.src='https://crafatar.com/avatars/user?size=32'">
+                            <span class="font-medium text-gray-200">{{ player.name }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex gap-2">
+                            {% if player.is_op %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded bg-red-500/20 text-red-400 border border-red-500/30">OP</span>
+                            {% endif %}
+                            {% if player.is_whitelisted %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded bg-green-500/20 text-green-400 border border-green-500/30">Whitelisted</span>
+                            {% endif %}
+                            {% if player.is_banned %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded bg-gray-600/50 text-gray-400 border border-gray-600/50">Banned</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-500 font-mono text-xs">{{ player.uuid }}</td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex justify-end gap-2">
+                            <!-- Toggle OP -->
+                            <form method="POST" action="{{ url_for('rcon_action') }}" class="inline">
+                                <input type="hidden" name="redirect" value="{{ url_for('players') }}">
+                                {% if player.is_op %}
+                                <input type="hidden" name="command" value="deop {{ player.name }}">
+                                <button class="px-3 py-1 bg-gray-800 hover:bg-red-900/50 text-gray-300 rounded border border-gray-700 transition text-xs">Deop</button>
+                                {% else %}
+                                <input type="hidden" name="command" value="op {{ player.name }}">
+                                <button class="px-3 py-1 bg-gray-800 hover:bg-red-900/50 text-gray-300 rounded border border-gray-700 transition text-xs">Op</button>
+                                {% endif %}
+                            </form>
+
+                            <!-- Toggle Whitelist -->
+                            <form method="POST" action="{{ url_for('rcon_action') }}" class="inline">
+                                <input type="hidden" name="redirect" value="{{ url_for('players') }}">
+                                {% if player.is_whitelisted %}
+                                <input type="hidden" name="command" value="whitelist remove {{ player.name }}">
+                                <button class="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded border border-gray-700 transition text-xs">Unwhitelist</button>
+                                {% else %}
+                                <input type="hidden" name="command" value="whitelist add {{ player.name }}">
+                                <button class="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded border border-gray-700 transition text-xs">Whitelist</button>
+                                {% endif %}
+                            </form>
+
+                            <!-- Kick & Ban -->
+                            <form method="POST" action="{{ url_for('rcon_action') }}" class="inline">
+                                <input type="hidden" name="redirect" value="{{ url_for('players') }}">
+                                <input type="hidden" name="command" value="kick {{ player.name }}">
+                                <button class="px-3 py-1 bg-gray-800 hover:bg-orange-800/50 text-orange-400 rounded border border-gray-700 transition text-xs">Kick</button>
+                            </form>
+                            
+                            <form method="POST" action="{{ url_for('rcon_action') }}" class="inline">
+                                <input type="hidden" name="redirect" value="{{ url_for('players') }}">
+                                {% if player.is_banned %}
+                                <input type="hidden" name="command" value="pardon {{ player.name }}">
+                                <button class="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded border border-gray-700 transition text-xs">Unban</button>
+                                {% else %}
+                                <input type="hidden" name="command" value="ban {{ player.name }}">
+                                <button class="px-3 py-1 bg-gray-800 hover:bg-red-900/50 text-red-500 rounded border border-red-900 border-gray-700 transition text-xs">Ban</button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="px-6 py-10 text-center text-gray-500">
+                        <i class="fa-solid fa-ghost text-4xl mb-3 opacity-50 block"></i>
+                        No players found in cache.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

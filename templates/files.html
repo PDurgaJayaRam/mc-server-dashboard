@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h1 class="text-3xl font-bold text-white mb-2">File Manager</h1>
+        <p class="text-gray-400">Manage your server files in <code class="bg-gray-800 px-1 py-0.5 rounded text-gray-300">{{ current_path }}</code></p>
+    </div>
+    <div>
+        <button onclick="document.getElementById('uploadModal').classList.remove('hidden')" class="bg-mcgreen hover:bg-emerald-600 px-4 py-2 rounded-lg font-medium transition shadow-lg text-white">
+            <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Upload File
+        </button>
+    </div>
+</div>
+
+<div class="glass-panel rounded-xl overflow-hidden shadow-xl border border-gray-800">
+    <div class="bg-gray-900/80 px-6 py-4 flex items-center gap-4 text-sm font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-800">
+        <div class="w-8"></div>
+        <div class="flex-1">Name</div>
+        <div class="w-32 hidden md:block text-right">Size</div>
+        <div class="w-48 hidden lg:block text-right">Modified</div>
+        <div class="w-32 text-right">Actions</div>
+    </div>
+    
+    <div class="divide-y divide-gray-800/50 max-h-[60vh] overflow-y-auto">
+        {% if parent_path %}
+        <div class="px-6 py-3 flex items-center gap-4 hover:bg-gray-800/50 transition">
+            <div class="w-8 flex justify-center"><i class="fa-solid fa-folder-open text-blue-400 text-xl"></i></div>
+            <div class="flex-1">
+                <a href="{{ url_for('list_files', path=parent_path) }}" class="font-medium text-gray-200 block">..</a>
+            </div>
+            <div class="w-32 hidden md:block text-right text-gray-500">-</div>
+            <div class="w-48 hidden lg:block text-right text-gray-500">-</div>
+            <div class="w-32 text-right"></div>
+        </div>
+        {% endif %}
+
+        {% for item in items %}
+        <div class="px-6 py-3 flex items-center gap-4 hover:bg-gray-800/50 transition group">
+            <div class="w-8 flex justify-center">
+                {% if item.is_dir %}
+                <i class="fa-solid fa-folder text-blue-400 text-xl group-hover:text-blue-300 transition-colors"></i>
+                {% else %}
+                <i class="fa-solid fa-file-code text-gray-400 text-xl"></i>
+                {% endif %}
+            </div>
+            <div class="flex-1 truncate">
+                {% if item.is_dir %}
+                <a href="{{ url_for('list_files', path=item.path) }}" class="font-medium text-gray-200 hover:text-white">{{ item.name }}</a>
+                {% else %}
+                <span class="font-medium text-gray-300">{{ item.name }}</span>
+                {% endif %}
+            </div>
+            <div class="w-32 hidden md:block text-right text-sm text-gray-400">{{ item.size }}</div>
+            <div class="w-48 hidden lg:block text-right text-sm text-gray-500">{{ item.modified }}</div>
+            <div class="w-32 text-right flex justify-end space-x-2">
+                {% if not item.is_dir and item.size_raw < 1000000 %} <!-- Limit inline edit roughly < 1MB -->
+                <a href="{{ url_for('edit_file', path=item.path) }}" class="p-1.5 text-gray-400 hover:text-blue-400 bg-gray-800 hover:bg-gray-700 rounded transition" title="Edit">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </a>
+                {% endif %}
+                
+                {% if not item.is_dir %}
+                <a href="{{ url_for('download_file', path=item.path) }}" class="p-1.5 text-gray-400 hover:text-mcgreen bg-gray-800 hover:bg-gray-700 rounded transition" title="Download">
+                    <i class="fa-solid fa-download"></i>
+                </a>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('delete_file') }}" class="inline" onsubmit="return confirm('Delete {{ item.name }}? This cannot be undone.');">
+                    <input type="hidden" name="path" value="{{ item.path }}">
+                    <button type="submit" class="p-1.5 text-gray-400 hover:text-red-500 bg-gray-800 hover:bg-gray-700 rounded transition" title="Delete">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="px-6 py-8 text-center text-gray-500">
+            <i class="fa-solid fa-folder-open text-4xl mb-3 opacity-50 block"></i>
+            This folder is empty.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div id="uploadModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center">
+    <div class="bg-mcpanel p-6 rounded-xl border border-gray-700 w-full max-w-md shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-white">Upload File</h3>
+            <button onclick="document.getElementById('uploadModal').classList.add('hidden')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
+        </div>
+        <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data">
+            <input type="hidden" name="path" value="{{ current_path }}">
+            <div class="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center mb-4 hover:border-mcgreen transition">
+                <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-500 mb-3 block"></i>
+                <input type="file" name="file" class="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-800 file:text-white hover:file:bg-gray-700 w-full" required>
+            </div>
+            <button type="submit" class="w-full bg-mcgreen hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition">Start Upload</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

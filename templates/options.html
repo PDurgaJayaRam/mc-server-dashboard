@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h1 class="text-3xl font-bold text-white mb-2">Options & Properties</h1>
+        <p class="text-gray-400">Visually configure <code>server.properties</code>. Changes require a server restart/reload.</p>
+    </div>
+    <button type="submit" form="props-form" class="bg-mcgreen hover:bg-emerald-600 px-6 py-2 rounded-lg font-bold shadow-lg transition text-white">
+        Save Changes
+    </button>
+</div>
+
+<div class="glass-panel p-6 rounded-xl border border-gray-800">
+    <form id="props-form" method="POST" action="{{ url_for('options') }}" class="space-y-8">
+        
+        <!-- General Section -->
+        <div>
+            <h3 class="text-xl font-bold text-white mb-4 border-b border-gray-800 pb-2 flex items-center">
+                <i class="fa-solid fa-sliders text-blue-400 mr-3"></i> General Settings
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- text -->
+                <div>
+                    <label class="block text-gray-400 text-sm font-semibold mb-2">Server Name (MOTD)</label>
+                    <input type="text" name="motd" value="{{ props.get('motd', 'A Minecraft Server') }}" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded text-white focus:border-mcblue">
+                </div>
+                <!-- int -->
+                <div>
+                    <label class="block text-gray-400 text-sm font-semibold mb-2">Max Players</label>
+                    <input type="number" name="max-players" value="{{ props.get('max-players', '20') }}" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded text-white focus:border-mcblue">
+                </div>
+                <!-- enum/select -->
+                <div>
+                    <label class="block text-gray-400 text-sm font-semibold mb-2">Difficulty</label>
+                    <select name="difficulty" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded text-white focus:border-mcblue">
+                        <option value="peaceful" {% if props.get('difficulty') == 'peaceful' %}selected{% endif %}>Peaceful</option>
+                        <option value="easy" {% if props.get('difficulty') == 'easy' %}selected{% endif %}>Easy</option>
+                        <option value="normal" {% if props.get('difficulty', 'normal') == 'normal' %}selected{% endif %}>Normal</option>
+                        <option value="hard" {% if props.get('difficulty') == 'hard' %}selected{% endif %}>Hard</option>
+                    </select>
+                </div>
+                <!-- enum -->
+                <div>
+                    <label class="block text-gray-400 text-sm font-semibold mb-2">Game Mode</label>
+                    <select name="gamemode" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded text-white focus:border-mcblue">
+                        <option value="survival" {% if props.get('gamemode', 'survival') == 'survival' %}selected{% endif %}>Survival</option>
+                        <option value="creative" {% if props.get('gamemode') == 'creative' %}selected{% endif %}>Creative</option>
+                        <option value="adventure" {% if props.get('gamemode') == 'adventure' %}selected{% endif %}>Adventure</option>
+                        <option value="spectator" {% if props.get('gamemode') == 'spectator' %}selected{% endif %}>Spectator</option>
+                    </select>
+                </div>
+                <!-- int -->
+                <div>
+                    <label class="block text-gray-400 text-sm font-semibold mb-2">View Distance (Chunks)</label>
+                    <input type="number" name="view-distance" value="{{ props.get('view-distance', '10') }}" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded text-white focus:border-mcblue">
+                </div>
+                <!-- int -->
+                <div>
+                    <label class="block text-gray-400 text-sm font-semibold mb-2">Simulation Distance</label>
+                    <input type="number" name="simulation-distance" value="{{ props.get('simulation-distance', '10') }}" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded text-white focus:border-mcblue">
+                </div>
+            </div>
+        </div>
+
+        <!-- Security -->
+        <div>
+            <h3 class="text-xl font-bold text-white mb-4 border-b border-gray-800 pb-2 flex items-center">
+                <i class="fa-solid fa-shield-halved text-red-400 mr-3"></i> Security Settings
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- boolean select -->
+                <div>
+                    <label class="block text-gray-400 text-sm font-semibold mb-2">Online Mode</label>
+                    <select name="online-mode" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded text-white focus:border-mcblue">
+                        <option value="true" {% if props.get('online-mode') == 'true' %}selected{% endif %}>True (Premium Only)</option>
+                        <option value="false" {% if props.get('online-mode') == 'false' %}selected{% endif %}>False (Cracked Support) *ClawCloud Run is set via Env*</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm font-semibold mb-2">Whitelist Enabled</label>
+                    <select name="white-list" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded text-white focus:border-mcblue">
+                        <option value="true" {% if props.get('white-list') == 'true' %}selected{% endif %}>True</option>
+                        <option value="false" {% if props.get('white-list', 'false') == 'false' %}selected{% endif %}>False</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm font-semibold mb-2">Spawn Protection Radius</label>
+                    <input type="number" name="spawn-protection" value="{{ props.get('spawn-protection', '16') }}" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded text-white focus:border-mcblue">
+                </div>
+            </div>
+        </div>
+
+        <!-- Gameplay Settings -->
+        <div>
+            <h3 class="text-xl font-bold text-white mb-4 border-b border-gray-800 pb-2 flex items-center">
+                <i class="fa-solid fa-gamepad text-green-400 mr-3"></i> Gameplay Details
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-gray-400 text-sm font-semibold mb-2">Allow PvP</label>
+                    <select name="pvp" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded text-white focus:border-mcblue">
+                        <option value="true" {% if props.get('pvp', 'true') == 'true' %}selected{% endif %}>True</option>
+                        <option value="false" {% if props.get('pvp') == 'false' %}selected{% endif %}>False</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm font-semibold mb-2">Allow Nether</label>
+                    <select name="allow-nether" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded text-white focus:border-mcblue">
+                        <option value="true" {% if props.get('allow-nether', 'true') == 'true' %}selected{% endif %}>True</option>
+                        <option value="false" {% if props.get('allow-nether') == 'false' %}selected{% endif %}>False</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm font-semibold mb-2">Allow Flight</label>
+                    <select name="allow-flight" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded text-white focus:border-mcblue">
+                        <option value="true" {% if props.get('allow-flight') == 'true' %}selected{% endif %}>True</option>
+                        <option value="false" {% if props.get('allow-flight', 'false') == 'false' %}selected{% endif %}>False</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm font-semibold mb-2">Hardcore</label>
+                    <select name="hardcore" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded text-white focus:border-mcblue">
+                        <option value="true" {% if props.get('hardcore') == 'true' %}selected{% endif %}>True</option>
+                        <option value="false" {% if props.get('hardcore', 'false') == 'false' %}selected{% endif %}>False</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-sm font-semibold mb-2">Max Tick Time</label>
+                    <input type="number" name="max-tick-time" value="{{ props.get('max-tick-time', '60000') }}" class="w-full bg-gray-900 border border-gray-700 p-2.5 rounded text-white focus:border-mcblue">
+                </div>
+            </div>
+        </div>
+        
+    </form>
+</div>
+{% endblock %}

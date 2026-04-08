@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h1 class="text-3xl font-bold text-white mb-2">Backups Manager</h1>
+        <p class="text-gray-400">Create point-in-time ZIP archives of your <code>world/</code> folder.</p>
+    </div>
+    <form method="POST" action="{{ url_for('create_backup') }}" onsubmit="document.getElementById('backup-btn').innerHTML='<i class=\'fa-solid fa-spinner fa-spin mr-2\'></i> Creating Backup...'; document.getElementById('backup-btn').disabled=true;">
+        <button id="backup-btn" type="submit" class="bg-mcgreen hover:bg-emerald-600 px-4 py-2 rounded-lg font-medium transition shadow-lg text-white">
+            <i class="fa-solid fa-box-archive mr-2"></i> Create Backup Now
+        </button>
+    </form>
+</div>
+
+<div class="glass-panel overflow-hidden border border-gray-800 rounded-xl">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="uppercase tracking-wider text-gray-500 bg-gray-900/80 border-b border-gray-800 font-semibold">
+                <tr>
+                    <th scope="col" class="px-6 py-4">Filename</th>
+                    <th scope="col" class="px-6 py-4 text-right">Size</th>
+                    <th scope="col" class="px-6 py-4 text-right">Created</th>
+                    <th scope="col" class="px-6 py-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800/50">
+                {% for backup in backups %}
+                <tr class="hover:bg-gray-800/30 transition group">
+                    <td class="px-6 py-4 font-mono text-gray-300">
+                        <i class="fa-regular fa-file-zipper text-blue-400 mr-2"></i> {{ backup.name }}
+                    </td>
+                    <td class="px-6 py-4 text-right text-gray-400">{{ backup.size }}</td>
+                    <td class="px-6 py-4 text-right text-gray-400">{{ backup.modified }}</td>
+                    <td class="px-6 py-4 text-right">
+                        <a href="{{ url_for('download_file', path=backup.path) }}" class="inline-block p-1.5 text-gray-400 hover:text-mcgreen bg-gray-800 hover:bg-gray-700 rounded transition mr-2" title="Download">
+                            <i class="fa-solid fa-download"></i>
+                        </a>
+                        <!-- Note: using the same delete_file route since it handles general paths safely as long as they are somewhat confined. Ideally, strict locking. -->
+                        <form method="POST" action="{{ url_for('delete_file') }}" class="inline" onsubmit="return confirm('Delete {{ backup.name }} permanently?');">
+                            <input type="hidden" name="path" value="{{ backup.path }}">
+                            <button type="submit" class="p-1.5 text-gray-400 hover:text-red-500 bg-gray-800 hover:bg-gray-700 rounded transition" title="Delete">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="px-6 py-10 text-center text-gray-500">
+                        <i class="fa-solid fa-ghost text-4xl mb-3 opacity-50 block"></i>
+                        No backups located in <code>/data/backups/</code>.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

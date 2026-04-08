@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="text-3xl font-bold text-white mb-2">Live Console</h1>
+    <p class="text-gray-400">View live server logs and send commands directly.</p>
+</div>
+
+<div class="glass-panel rounded-xl border border-gray-800 overflow-hidden flex flex-col h-[70vh]">
+    <div id="console-output" class="flex-1 console-container p-4">
+        <!-- Logs populated by JS -->
+    </div>
+    <div class="bg-gray-900/80 p-4 border-t border-gray-800">
+        <form id="console-form" class="flex gap-4">
+            <span class="flex items-center text-gray-500 font-mono pl-2">&gt;</span>
+            <input type="text" id="cmd-input" class="flex-1 bg-gray-900 border border-gray-700 rounded p-2 text-white font-mono focus:outline-none focus:border-mcblue transition" placeholder="help" autocomplete="off" autofocus>
+            <button type="submit" class="bg-mcblue hover:bg-blue-600 text-white px-6 rounded font-medium transition shadow-lg">Send</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const output = document.getElementById('console-output');
+    const form = document.getElementById('console-form');
+    const cmdInput = document.getElementById('cmd-input');
+    
+    function rgbColoring(text) {
+        // Very basic coloring
+        text = text.replace(/INFO/g, '<span class="log-info">INFO</span>');
+        text = text.replace(/WARN/g, '<span class="log-warn">WARN</span>');
+        text = text.replace(/ERROR/g, '<span class="log-error">ERROR</span>');
+        text = text.replace(/(joined the game|left the game)/g, '<span class="log-success">$1</span>');
+        return text;
+    }
+
+    async function fetchLogs() {
+        try {
+            const res = await fetch('{{ url_for("get_logs") }}');
+            const data = await res.json();
+            
+            // Rebuild content
+            let htmlStr = '';
+            data.lines.forEach(line => {
+                // Escape HTML
+                let safeLine = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                htmlStr += `<div class="log-line">${rgbColoring(safeLine)}</div>`;
+            });
+            
+            // Only auto-scroll if we are currently near the bottom
+            const isNearBottom = output.scrollHeight - output.scrollTop <= output.clientHeight + 50;
+            
+            output.innerHTML = htmlStr;
+            
+            if (isNearBottom) {
+                output.scrollTop = output.scrollHeight;
+            }
+        } catch(e) {
+            console.error("Log fetch failed", e);
+        }
+    }
+
+    // Polling
+    fetchLogs();
+    setInterval(fetchLogs, 3000);
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const cmd = cmdInput.value.trim();
+        if (!cmd) return;
+        
+        cmdInput.value = '';
+        cmdInput.focus();
+        
+        // Echo locally
+        output.innerHTML += `<div class="log-line text-blue-400">&gt; ${cmd}</div>`;
+        output.scrollTop = output.scrollHeight;
+
+        try {
+            const res = await fetch('{{ url_for("console_command") }}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({command: cmd})
+            });
+            const data = await res.json();
+            if (data.result) {
+                const lines = data.result.split('\n');
+                lines.forEach(l => {
+                    output.innerHTML += `<div class="log-line text-gray-300">${l}</div>`;
+                });
+                output.scrollTop = output.scrollHeight;
+            }
+        } catch(e) {
+            output.innerHTML += `<div class="log-line text-red-500">Error sending command</div>`;
+        }
+    });
+</script>
+{% endblock %}
