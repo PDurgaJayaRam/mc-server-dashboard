@@ -27,16 +27,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Make package public
-        run: |
-          gh api \
-            --method PUT \
-            -H "Accept: application/vnd.github+json" \
-            /users/${{ github.actor }}/packages/container/mc-server-dashboard.visibility \
-            -f 'visibility=public'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Extract metadata for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -55,3 +45,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Make package public
+        if: success()
+        run: |
+          PACKAGE_NAME=$(echo "${{ steps.meta.outputs.tags }}" | grep -oP 'ghcr.io/[^:]+' | head -1 | sed 's/ghcr.io\///')
+          gh api \
+            --method PUT \
+            -H "Accept: application/vnd.github+json" \
+            "/orgs/${{ github.repository_owner }}/packages/container/$PACKAGE_NAME/visibility" \
+            -f 'visibility=public'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
