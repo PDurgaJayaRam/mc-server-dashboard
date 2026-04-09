@@ -49,11 +49,10 @@ jobs:
       - name: Make package public
         if: success()
         run: |
-          PACKAGE_NAME=$(echo "${{ steps.meta.outputs.tags }}" | grep -oP 'ghcr.io/[^:]+' | head -1 | sed 's/ghcr.io\///')
           gh api \
             --method PUT \
             -H "Accept: application/vnd.github+json" \
-            "/orgs/${{ github.repository_owner }}/packages/container/$PACKAGE_NAME/visibility" \
+            "/users/PDurgaJayaRam/packages/container/mc-server-dashboard/visibility" \
             -f 'visibility=public'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
