@@ -1,10 +1,31 @@
 #!/bin/bash
-echo "[DASHBOARD] Starting Flask internal web server..."
+echo "[DASHBOARD] Starting Flask web server with retry logic..."
 
-# Start dashboard and pipe all output to the main container log
-# We use & to run in background
-python3 /dashboard.py 2>&1 | sed 's/^/[DASHBOARD] /' &
+MAX_RETRIES=10
+RETRY_DELAY=2
+PORT=${PORT:-8080}
+
+for i in $(seq 1 $MAX_RETRIES); do
+    echo "[DASHBOARD] Starting dashboard (attempt $i/$MAX_RETRIES)..."
+    python3 /dashboard.py 2>&1 | sed 's/^/[DASHBOARD] /' &
+    DASHBOARD_PID=$!
+    
+    sleep $RETRY_DELAY
+    
+    if curl -s http://localhost:$PORT/login > /dev/null 2>&1; then
+        echo "[DASHBOARD] Dashboard started successfully on port $PORT"
+        break
+    else
+        echo "[DASHBOARD] Dashboard not responding, retrying..."
+        kill $DASHBOARD_PID 2>/dev/null
+        sleep $RETRY_DELAY
+    fi
+    
+    if [ $i -eq $MAX_RETRIES ]; then
+        echo "[DASHBOARD] Failed to start after $MAX_RETRIES attempts, starting anyway..."
+        python3 /dashboard.py 2>&1 | sed 's/^/[DASHBOARD] /' &
+    fi
+done
 
 echo "[DASHBOARD] Handing over control to Minecraft server script..."
-# Use exec to ensure Minecraft becomes PID 1 and receives signals
 exec /start
