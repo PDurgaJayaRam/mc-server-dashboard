@@ -3,7 +3,7 @@ echo "[DASHBOARD] Starting Flask web server with retry logic..."
 
 MAX_RETRIES=10
 RETRY_DELAY=2
-PORT=${PORT:-8080}
+PORT=${PORT:-5000}
 
 for i in $(seq 1 $MAX_RETRIES); do
     echo "[DASHBOARD] Starting dashboard (attempt $i/$MAX_RETRIES)..."

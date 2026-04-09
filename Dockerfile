@@ -20,7 +20,7 @@ RUN dos2unix /start.sh && chmod +x /start.sh
 
 # Enable unbuffered logging so errors show up instantly in ClawCloud
 ENV PYTHONUNBUFFERED=1
-EXPOSE 8080
+EXPOSE 5000
 EXPOSE 25565
 
 CMD ["/start.sh"]
