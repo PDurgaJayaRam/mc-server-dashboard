@@ -34,6 +34,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           tags: |
             type=raw,value=latest
+            type=raw,value=deploy-${{ github.run_number }}
             type=sha
 
       - name: Build and push Docker image
@@ -45,3 +46,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Display deployed image
+        run: echo "Deployed image: ${{ steps.meta.outputs.tags }}"
