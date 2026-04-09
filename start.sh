@@ -5,8 +5,11 @@ echo "[DASHBOARD] === STARTING ==="
 echo "[DASHBOARD] Checking Python..."
 python3 --version
 
+cd /
+
 echo "[DASHBOARD] Starting gunicorn on port 5000..."
 gunicorn --bind 0.0.0.0:5000 \
+         --chdir / \
          --workers 1 \
          --timeout 120 \
          --access-logfile - \
