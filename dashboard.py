@@ -388,8 +388,12 @@ def create_backup():
 def network():
     return render_template('network.html', rcon_port=RCON_PORT)
 
+@app.route('/health')
+def health():
+    return {'status': 'ok'}, 200
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"[DASHBOARD] === STARTING FLASK ON PORT {port} ===")
     print(f"[DASHBOARD] Host: 0.0.0.0, Port: {port}")
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=False, threaded=True)

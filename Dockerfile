@@ -2,10 +2,12 @@ FROM itzg/minecraft-server
 
 USER root
 
-# Install Python and dos2unix to fix line endings from Windows
 RUN apt-get update && apt-get install -y \
-    python3 python3-pip dos2unix \
+    python3 python3-pip curl \
     && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install flask flask-session mcrcon psutil gunicorn \
+    --break-system-packages
 
 COPY requirements_dashboard.txt .
 RUN pip3 install --break-system-packages -r requirements_dashboard.txt
@@ -15,13 +17,15 @@ COPY templates/ /templates/
 COPY static/ /static/
 COPY start.sh /start.sh
 
-# FORCE Linux line endings and set permissions
-RUN dos2unix /start.sh && chmod +x /start.sh
+RUN chmod +x /start.sh
 
-# Enable unbuffered logging so errors show up instantly in ClawCloud
 ENV PYTHONUNBUFFERED=1
 ENV PORT=5000
+
 EXPOSE 5000
-EXPOSE 25565
+
+HEALTHCHECK --interval=30s --timeout=10s \
+    --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
 
 CMD ["/start.sh"]
