@@ -1,17 +1,29 @@
 #!/bin/bash
 set -e
 
-echo "[DASHBOARD] Starting Minecraft Dashboard on port 5000..."
+echo "[DASHBOARD] === STARTING ==="
+echo "[DASHBOARD] Checking Python..."
+python3 --version
 
-# Start gunicorn dashboard
+echo "[DASHBOARD] Starting gunicorn on port 5000..."
 gunicorn --bind 0.0.0.0:5000 \
-         --workers 2 \
+         --workers 1 \
          --timeout 120 \
          --access-logfile - \
          --error-logfile - \
          dashboard:app &
 
-echo "[DASHBOARD] Dashboard started!"
+GUNICORN_PID=$!
+echo "[DASHBOARD] Gunicorn started with PID: $GUNICORN_PID"
+
+sleep 5
+
+if ps -p $GUNICORN_PID > /dev/null; then
+    echo "[DASHBOARD] Dashboard is running!"
+else
+    echo "[DASHBOARD] ERROR: Dashboard failed to start!"
+    exit 1
+fi
 
 echo "[DASHBOARD] Starting Minecraft Server..."
 exec /start
